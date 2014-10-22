@@ -219,7 +219,17 @@ void exceptionHandler(NSException *exception) {
 }
 
 - (void)captureException:(NSException *)exception additionalExtra:(NSDictionary *)additionalExtra additionalTags:(NSDictionary *)additionalTags sendNow:(BOOL)sendNow {
-    NSString *message = [NSString stringWithFormat:@"%@: %@", exception.name, exception.reason];
+    NSMutableArray *reasonWords = [NSMutableArray new];
+
+    // getting rid of addresses in message, so Sentry will be able to group similar exceptions
+    for (NSString *word in [exception.reason componentsSeparatedByString:@" "]) {
+        if (! [word hasPrefix:@"0x"]) {
+            [reasonWords addObject:word];
+        }
+    }
+    NSString *reason = [reasonWords componentsJoinedByString:@" "];
+
+    NSString *message = [NSString stringWithFormat:@"%@: %@", exception.name, reason];
 
     NSDictionary *exceptionDict = [NSDictionary dictionaryWithObjectsAndKeys:
                                    exception.name, @"type",
